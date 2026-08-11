@@ -9,7 +9,7 @@ third_party/pcl/3rdParty/FLANN/lib/*-gd.lib
 third_party/pcl/3rdParty/FLANN/bin/*-gd.dll
 
 # Runtime/generated data
- data/input/
+data/input/
 data/output/
 
 # Local IDE and OS files
@@ -18,3 +18,4 @@ data/output/
 .idea/
 *.user
 *.suo
+
