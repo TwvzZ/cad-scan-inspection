@@ -1,0 +1,20 @@
+﻿# Generated build trees
+build/
+
+# Local debug third-party libraries
+third_party/pcl/lib/*d.lib
+third_party/pcl/bin/*d.dll
+third_party/pcl/3rdParty/Boost/lib/*-gd-*.lib
+third_party/pcl/3rdParty/FLANN/lib/*-gd.lib
+third_party/pcl/3rdParty/FLANN/bin/*-gd.dll
+
+# Runtime/generated data
+ data/input/
+data/output/
+
+# Local IDE and OS files
+.vscode/
+.agents/
+.idea/
+*.user
+*.suo

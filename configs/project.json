@@ -1,0 +1,70 @@
+﻿{
+  "cad": {
+    "step_path": "../assets/cad/vg1500040104a.stp",
+    "point_cloud_output_path": "../data/output/sampling/vg1500040104a_sampled.ply",
+    "face_catalog_path": "../assets/face_catalogs/vg1500040104a_faces.json",
+    "sampling": {
+      "point_count": 600000,
+      "method": "uniform",
+      "unit": "MM",
+      "linear_tolerance": 0.1,
+      "angular_tolerance": 0.1
+    }
+  },
+  "scan": {
+    "path": "../data/input/scan/zhujian_1seg.ply",
+    "max_abs_coordinate": 1000000.0
+  },
+  "initial_pose": {
+    "mode": "pca_robust",
+    "matrix": null,
+    "voxel_size": 2.0,
+    "distance_factor": 1.5,
+    "estimate_scale": false,
+    "attempts": 4,
+    "pca_iterations": 30,
+    "pca_initial_distance": 15.0,
+    "pca_min_distance": 1.5,
+    "pca_trim_percentile": 85.0,
+    "pca_score_distance": 2.5,
+    "pca_translation_distance": 1.5,
+    "pca_translation_range": 7.5,
+    "pca_translation_step": 0.5,
+    "pca_translation_repeats": 2,
+    "max_iterations": 300000,
+    "confidence": 0.999
+  },
+  "icp": {
+    "voxel_size": 0.8,
+    "max_correspondence_distance": 2.5,
+    "method": "point_to_plane",
+    "max_iterations": 120,
+    "relative_fitness": 1e-7,
+    "relative_rmse": 1e-7
+  },
+  "roi": {
+    "height_range": [-1.0, 1.0],
+    "xy_margin": 0.0,
+    "plane_ransac": {
+      "distance_threshold": 0.15,
+      "ransac_n": 3,
+      "num_iterations": 3000,
+      "probability": 0.999
+    }
+  },
+  "detection_faces": [
+    {"name": "face_01", "step_face_id": 187, "center": [-23.0363725810, -20.4486690076, -39.95], "size": [67.6858083221, 54.5679517115], "normal": [0, 0, -1], "x_direction": [-1.660968478114e-14, 1, 0]},
+    {"name": "face_02", "step_face_id": 189, "center": [-174.5370423392, -20.4460942780, -39.95], "size": [67.6858181972, 54.5679463133], "normal": [0, 0, -1], "x_direction": [8.309953062824e-13, 1, 0]},
+    {"name": "face_03", "step_face_id": 190, "center": [-326.0370423395, -20.4460942782, -39.95], "size": [67.6858181972, 54.5679463133], "normal": [0, 0, -1], "x_direction": [8.320174407305e-13, 1, 0]},
+    {"name": "face_04", "step_face_id": 191, "center": [-477.5370423391, -20.4460942780, -39.95], "size": [67.6858181972, 54.5679463132], "normal": [0, 0, -1], "x_direction": [8.320174407305e-13, 1, 0]},
+    {"name": "face_05", "step_face_id": 188, "center": [-629.0370423399, -20.4460942783, -39.95], "size": [67.6858181971, 54.5679463135], "normal": [0, 0, -1], "x_direction": [8.258846340420e-13, 1, 0]},
+    {"name": "face_06", "step_face_id": 192, "center": [-780.5370423917, -20.4460943379, -39.95], "size": [67.6858172253, 54.5679466839], "normal": [0, 0, -1], "x_direction": [8.299731718343e-13, 1, 0]}
+  ],
+  "output_group": "test",
+  "output_name": "defect_01",
+  "output_dirs": {
+    "test": "../data/output/inspection/test",
+    "actual": "../data/output/inspection/actual"
+  }
+}
+
