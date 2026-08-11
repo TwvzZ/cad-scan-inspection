@@ -7,6 +7,8 @@
     [double]$VoxelSize = 0.5,
     [double]$LinearDeflection = 0.1,
     [double]$AngularDeflection = 10.0,
+    [UInt32]$RelativeDeflection = 0,
+    [UInt32]$ParallelMeshing = 1,
     [UInt32]$Seed = 1,
     [ValidateSet("all", "outer", "visible")]
     [string]$Mode = "outer",
@@ -19,7 +21,10 @@
     [double]$MaxIncidenceAngle = 75.0,
     [double]$CameraX = 0.0,
     [double]$CameraY = 0.0,
-    [double]$CameraZ = 0.0
+    [double]$CameraZ = 0.0,
+    [double]$VisibilityTolerance = 0.0,
+    [ValidateRange(1, 32)]
+    [UInt32]$VisibilityOversampleFactor = 4
 )
 
 $ErrorActionPreference = "Stop"
@@ -27,7 +32,7 @@ $workspace = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $InputStep = if ($InputStep) { $InputStep } else { Join-Path $workspace "assets\\cad\\vg1500040104a.stp" }
 $OutputPly = if ($OutputPly) { $OutputPly } else { Join-Path $workspace "data\\output\\sampling\\vg1500040104a_sampled_test.ply" }
 $executable = Join-Path $workspace "build\sampling\Release\cadsample_test.exe"
-$runtimeRoot = "D:\VisionInspect3D\third_party\win-x64"
+$runtimeRoot = Join-Path $workspace "third_party\win-x64"
 $occtBin = Join-Path $runtimeRoot "occt-7.9.3\bin"
 $thirdPartyRoot = $runtimeRoot
 
@@ -59,6 +64,8 @@ $arguments = @(
     $VoxelSize.ToString([Globalization.CultureInfo]::InvariantCulture),
     $LinearDeflection.ToString([Globalization.CultureInfo]::InvariantCulture),
     $AngularDeflection.ToString([Globalization.CultureInfo]::InvariantCulture),
+    $RelativeDeflection.ToString([Globalization.CultureInfo]::InvariantCulture),
+    $ParallelMeshing.ToString([Globalization.CultureInfo]::InvariantCulture),
     $Seed.ToString([Globalization.CultureInfo]::InvariantCulture),
     $Mode
 )
@@ -76,6 +83,8 @@ if ($Mode -eq "visible") {
     $arguments += $MaxIncidenceAngle.ToString(
         [Globalization.CultureInfo]::InvariantCulture)
 }
+$arguments += $VisibilityTolerance.ToString([Globalization.CultureInfo]::InvariantCulture)
+$arguments += $VisibilityOversampleFactor.ToString([Globalization.CultureInfo]::InvariantCulture)
 
 & $executable @arguments
 if ($LASTEXITCODE -ne 0) {

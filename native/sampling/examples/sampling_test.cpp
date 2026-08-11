@@ -121,9 +121,11 @@ void PrintUsage(const char* program) {
     std::cout
         << "Usage:\n  " << program
         << " input.stp output.ply [point_count] [voxel_size]"
-           " [linear_deflection] [angular_deg] [seed]"
+           " [linear_deflection] [angular_deg] [relative_deflection]"
+           " [parallel_meshing] [seed]"
            " [outer|all|visible]"
-           " [perspective|orthographic x y z [max_incidence_deg]]\n\n"
+           " [perspective|orthographic x y z [max_incidence_deg]]"
+           " [visibility_tolerance] [oversample_factor]\n\n"
         << "Defaults:\n"
         << "  point_count=100000, voxel_size=0 (disabled),\n"
         << "  linear_deflection=0.1, angular_deg=10, seed=1,\n"
@@ -132,8 +134,7 @@ void PrintUsage(const char* program) {
 }
 
 int Run(const std::vector<std::string>& args) {
-    if (args.size() < 3 || args.size() > 14 ||
-        (args.size() > 9 && args.size() != 13 && args.size() != 14)) {
+    if (args.size() < 3 || args.size() > 19) {
         PrintUsage(args.empty() ? "cadsample_test" : args[0].c_str());
         return 2;
     }
@@ -157,44 +158,56 @@ int Run(const std::vector<std::string>& args) {
         options.angular_deflection_deg =
             ParseDouble(args[6], "angular_deg", false);
     if (args.size() > 7)
-        options.random_seed = ParseUInt32(args[7], "seed");
-    if (args.size() > 8) {
-        if (args[8] == "all")
+        options.relative_deflection = ParseUInt32(args[7], "relative_deflection");
+    if (args.size() > 8)
+        options.parallel_meshing = ParseUInt32(args[8], "parallel_meshing");
+    if (args.size() > 9)
+        options.random_seed = ParseUInt32(args[9], "seed");
+    if (args.size() > 10) {
+        if (args[10] == "all")
             options.surface_mode = CADSAMPLE_SURFACE_ALL_FACES;
-        else if (args[8] == "outer")
+        else if (args[10] == "outer")
             options.surface_mode = CADSAMPLE_SURFACE_OUTER_SHELL;
-        else if (args[8] == "visible")
+        else if (args[10] == "visible")
             options.surface_mode = CADSAMPLE_SURFACE_VISIBLE;
         else
             throw std::invalid_argument(
                 "surface mode must be outer, all, or visible");
     }
-    if (args.size() == 13 || args.size() == 14) {
-        if (args[9] == "perspective") {
+    size_t next = 11;
+    if (args.size() > next &&
+        (args[next] == "perspective" || args[next] == "orthographic")) {
+        if (args[next] == "perspective") {
             options.projection_mode = CADSAMPLE_PROJECTION_PERSPECTIVE;
             options.camera_position[0] =
-                ParseFiniteDouble(args[10], "camera_x");
+                ParseFiniteDouble(args[next + 1], "camera_x");
             options.camera_position[1] =
-                ParseFiniteDouble(args[11], "camera_y");
+                ParseFiniteDouble(args[next + 2], "camera_y");
             options.camera_position[2] =
-                ParseFiniteDouble(args[12], "camera_z");
-        } else if (args[9] == "orthographic") {
+                ParseFiniteDouble(args[next + 3], "camera_z");
+        } else if (args[next] == "orthographic") {
             options.projection_mode = CADSAMPLE_PROJECTION_ORTHOGRAPHIC;
             options.view_direction[0] =
-                ParseFiniteDouble(args[10], "view_x");
+                ParseFiniteDouble(args[next + 1], "view_x");
             options.view_direction[1] =
-                ParseFiniteDouble(args[11], "view_y");
+                ParseFiniteDouble(args[next + 2], "view_y");
             options.view_direction[2] =
-                ParseFiniteDouble(args[12], "view_z");
+                ParseFiniteDouble(args[next + 3], "view_z");
         } else {
             throw std::invalid_argument(
                 "projection must be perspective or orthographic");
         }
-        if (args.size() == 14) {
+        next += 4;
+        if (args.size() > next) {
             options.max_incidence_angle_deg =
-                ParseDouble(args[13], "max_incidence_deg", false);
+                ParseDouble(args[next], "max_incidence_deg", false);
+            ++next;
         }
     }
+    if (args.size() > next)
+        options.visibility_tolerance = ParseDouble(args[next], "visibility_tolerance", true);
+    if (args.size() > next + 1)
+        options.visibility_oversample_factor = ParseUInt32(args[next + 1], "oversample_factor");
 
     CadSampleHandle handle = cadsample_create();
     if (!handle) throw std::runtime_error("could not create sampler handle");
