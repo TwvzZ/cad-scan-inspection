@@ -22,10 +22,11 @@
     [UInt32]$RansacAttempts = 4,
     [UInt32]$MaxCandidates = 4,
     [UInt32]$MaxRefinedCandidates = 2,
-    [string]$PclRoot = "D:\ThirdParty\PCL 1.14.1"
+    [string]$PclRoot = ""
 )
 
 $workspaceRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
+$PclRoot = if ($PclRoot) { $PclRoot } else { Join-Path $workspaceRoot "third_party\pcl" }
 $SourceScan = if ($SourceScan) { $SourceScan } else { Join-Path $workspaceRoot "data\input\scan\zhujian_1seg.ply" }
 $TargetCad = if ($TargetCad) { $TargetCad } else { Join-Path $workspaceRoot "data\output\sampling\vg1500040104a_sampled.ply" }
 $OutputAligned = if ($OutputAligned) { $OutputAligned } else { Join-Path $workspaceRoot "data\output\registration\zhujian_1seg_aligned.ply" }
