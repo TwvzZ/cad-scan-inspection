@@ -12,16 +12,13 @@
     [UInt32]$Seed = 1,
     [ValidateSet("all", "outer", "visible")]
     [string]$Mode = "outer",
-    [ValidateSet("orthographic", "perspective")]
+    [ValidateSet("orthographic")]
     [string]$Projection = "orthographic",
     [double]$ViewX = 0.0,
     [double]$ViewY = 0.0,
     [double]$ViewZ = -1.0,
     [ValidateRange(0.01, 89.99)]
     [double]$MaxIncidenceAngle = 75.0,
-    [double]$CameraX = 0.0,
-    [double]$CameraY = 0.0,
-    [double]$CameraZ = 0.0,
     [double]$VisibilityTolerance = 0.0,
     [ValidateRange(1, 32)]
     [UInt32]$VisibilityOversampleFactor = 4
@@ -71,15 +68,9 @@ $arguments = @(
 )
 if ($Mode -eq "visible") {
     $arguments += $Projection
-    if ($Projection -eq "orthographic") {
-        $arguments += $ViewX.ToString([Globalization.CultureInfo]::InvariantCulture)
-        $arguments += $ViewY.ToString([Globalization.CultureInfo]::InvariantCulture)
-        $arguments += $ViewZ.ToString([Globalization.CultureInfo]::InvariantCulture)
-    } else {
-        $arguments += $CameraX.ToString([Globalization.CultureInfo]::InvariantCulture)
-        $arguments += $CameraY.ToString([Globalization.CultureInfo]::InvariantCulture)
-        $arguments += $CameraZ.ToString([Globalization.CultureInfo]::InvariantCulture)
-    }
+    $arguments += $ViewX.ToString([Globalization.CultureInfo]::InvariantCulture)
+    $arguments += $ViewY.ToString([Globalization.CultureInfo]::InvariantCulture)
+    $arguments += $ViewZ.ToString([Globalization.CultureInfo]::InvariantCulture)
     $arguments += $MaxIncidenceAngle.ToString(
         [Globalization.CultureInfo]::InvariantCulture)
 }

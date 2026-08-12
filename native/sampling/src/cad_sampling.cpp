@@ -414,20 +414,20 @@ void BuildAliasTable(const std::vector<Triangle> &triangles, double total_area,
     (*probability)[index] = 1.0;
 }
 
-std::vector<SamplePoint> GeneratePoints(
+void GeneratePoints(
     const std::vector<Triangle> &triangles,
     const std::vector<double> &probability,
     const std::vector<size_t> &alias,
     const std::vector<uint32_t> &bvh_indices,
     const std::vector<BvhNode> &bvh_nodes, const CadSampleOptions &options,
-    double *visibility_elapsed_ms) {
+    double *visibility_elapsed_ms, std::vector<SamplePoint> *points) {
   const size_t triangle_count = triangles.size();
   std::mt19937_64 random(options.random_seed);
   std::uniform_int_distribution<size_t> triangle_distribution(
       0, triangle_count - 1);
   std::uniform_real_distribution<double> unit(0.0, 1.0);
-  std::vector<SamplePoint> points;
-  points.reserve(static_cast<size_t>(options.target_point_count));
+  points->clear();
+  points->reserve(static_cast<size_t>(options.target_point_count));
   const bool visible_only = options.surface_mode == CADSAMPLE_SURFACE_VISIBLE;
   const Clock::time_point visibility_started = Clock::now();
   const uint64_t maximum_candidates =
@@ -471,7 +471,7 @@ std::vector<SamplePoint> GeneratePoints(
   }
   for (uint64_t i = 0;
        i < maximum_candidates &&
-       points.size() < static_cast<size_t>(options.target_point_count);
+       points->size() < static_cast<size_t>(options.target_point_count);
        ++i) {
     const size_t column = triangle_distribution(random);
     const size_t triangle_index =
@@ -511,12 +511,10 @@ std::vector<SamplePoint> GeneratePoints(
           continue;
       }
     }
-    points.push_back({position, triangle.normal, triangle.face_id});
+    points->push_back({position, triangle.normal, triangle.face_id});
   }
   *visibility_elapsed_ms = visible_only ? ElapsedMs(visibility_started) : 0.0;
-  return points;
 }
-
 void VoxelDownsample(std::vector<SamplePoint> *points, double voxel_size) {
   if (!(voxel_size > 0.0))
     return;
@@ -825,10 +823,11 @@ cadsample_generate(CadSampleHandle handle, const CadSampleOptions *options,
           result->sample_cache_hit = 1;
         } else {
           const Clock::time_point generation_started = Clock::now();
-          handle->sampled_points = GeneratePoints(
+          GeneratePoints(
               handle->triangles, handle->alias_probability,
               handle->alias_index, handle->bvh_indices, handle->bvh_nodes,
-              *options, &handle->last_visibility_elapsed_ms);
+              *options, &handle->last_visibility_elapsed_ms,
+              &handle->sampled_points);
           result->generation_elapsed_ms = ElapsedMs(generation_started);
           const Clock::time_point voxel_started = Clock::now();
           VoxelDownsample(&handle->sampled_points, options->voxel_size);

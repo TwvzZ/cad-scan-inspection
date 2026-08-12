@@ -5,6 +5,7 @@
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
+#include <chrono>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -97,17 +98,16 @@ void WriteBinaryPly(const std::filesystem::path& path,
     block.reserve(std::min(count, block_size));
     for (size_t begin = 0; begin < count; begin += block_size) {
         const size_t end = std::min(count, begin + block_size);
-        block.clear();
+        block.resize(end - begin);
         for (size_t i = begin; i < end; ++i) {
-            block.push_back({
+            block[i - begin] = {
                 static_cast<float>(xyz[i * 3 + 0]),
                 static_cast<float>(xyz[i * 3 + 1]),
                 static_cast<float>(xyz[i * 3 + 2]),
                 static_cast<float>(normals[i * 3 + 0]),
                 static_cast<float>(normals[i * 3 + 1]),
                 static_cast<float>(normals[i * 3 + 2]),
-                face_ids[i]
-            });
+                face_ids[i]};
         }
         output.write(reinterpret_cast<const char*>(block.data()),
                      static_cast<std::streamsize>(
@@ -269,7 +269,10 @@ int Run(const std::vector<std::string>& args) {
         }
     }
 
+    const auto ply_started = std::chrono::steady_clock::now();
     WriteBinaryPly(output, xyz, normals, face_ids);
+    const double ply_write_ms = std::chrono::duration<double, std::milli>(
+        std::chrono::steady_clock::now() - ply_started).count();
     const uintmax_t output_bytes = std::filesystem::file_size(output);
     std::cout << std::fixed << std::setprecision(3)
               << "Sampling succeeded\n"
@@ -291,6 +294,9 @@ int Run(const std::vector<std::string>& args) {
               << "  generate:    " << generation_ms << " ms\n"
               << "  voxel:       " << voxel_ms << " ms\n"
               << "  buffer copy: " << result.sample_elapsed_ms << " ms\n"
+              << "  PLY write:   " << ply_write_ms << " ms\n"
+              << "  mesh cache:  " << result.mesh_cache_hit << "\n"
+              << "  sample cache:" << result.sample_cache_hit << "\n"
               << "  PLY size:    " << output_bytes << " bytes\n";
     return 0;
 }
