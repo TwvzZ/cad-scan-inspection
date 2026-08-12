@@ -158,9 +158,11 @@ int Run(const std::vector<std::string>& args) {
         options.angular_deflection_deg =
             ParseDouble(args[6], "angular_deg", false);
     if (args.size() > 7)
-        options.relative_deflection = ParseUInt32(args[7], "relative_deflection");
+        options.relative_deflection =
+            args[7] == "0" ? 0u : ParseUInt32(args[7], "relative_deflection");
     if (args.size() > 8)
-        options.parallel_meshing = ParseUInt32(args[8], "parallel_meshing");
+        options.parallel_meshing =
+            args[8] == "0" ? 0u : ParseUInt32(args[8], "parallel_meshing");
     if (args.size() > 9)
         options.random_seed = ParseUInt32(args[9], "seed");
     if (args.size() > 10) {

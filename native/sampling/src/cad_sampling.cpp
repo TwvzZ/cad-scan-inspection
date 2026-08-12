@@ -236,17 +236,19 @@ bool RayTriangle(const Vec3 &origin, const Vec3 &direction,
 bool HasOccluder(const std::vector<Triangle> &triangles,
                  const std::vector<uint32_t> &indices,
                  const std::vector<BvhNode> &nodes, const Vec3 &origin,
-                 const Vec3 &direction, double maximum_distance) {
-  std::vector<int> stack{0};
-  while (!stack.empty()) {
-    const int index = stack.back();
-    stack.pop_back();
+                 const Vec3 &direction, double maximum_distance,
+                 std::vector<int> *stack) {
+  stack->clear();
+  stack->push_back(0);
+  while (!stack->empty()) {
+    const int index = stack->back();
+    stack->pop_back();
     const BvhNode &node = nodes[index];
     if (!RayBox(origin, direction, node, maximum_distance))
       continue;
     if (node.left >= 0) {
-      stack.push_back(node.left);
-      stack.push_back(node.right);
+      stack->push_back(node.left);
+      stack->push_back(node.right);
       continue;
     }
     for (uint32_t i = node.begin; i < node.end; ++i) {
@@ -429,9 +431,16 @@ std::vector<SamplePoint> GeneratePoints(
   const bool visible_only = options.surface_mode == CADSAMPLE_SURFACE_VISIBLE;
   const Clock::time_point visibility_started = Clock::now();
   const uint64_t maximum_candidates =
-      options.target_point_count *
-      static_cast<uint64_t>(visible_only ? options.visibility_oversample_factor
-                                         : 1u);
+      options.target_point_count >
+              std::numeric_limits<uint64_t>::max() /
+                  static_cast<uint64_t>(visible_only
+                                            ? options.visibility_oversample_factor
+                                            : 1u)
+          ? std::numeric_limits<uint64_t>::max()
+          : options.target_point_count *
+                static_cast<uint64_t>(visible_only
+                                          ? options.visibility_oversample_factor
+                                          : 1u);
   const Vec3 camera{options.camera_position[0], options.camera_position[1],
                     options.camera_position[2]};
   Vec3 view_direction{options.view_direction[0], options.view_direction[1],
@@ -446,6 +455,12 @@ std::vector<SamplePoint> GeneratePoints(
   double tolerance = options.visibility_tolerance;
   const double minimum_facing_cosine = std::cos(
       options.max_incidence_angle_deg * 3.14159265358979323846 / 180.0);
+  const Vec3 orthographic_toward_sensor{-view_direction.x,
+                                        -view_direction.y,
+                                        -view_direction.z};
+  std::vector<int> traversal_stack;
+  if (visible_only)
+    traversal_stack.reserve(64);
   if (!(tolerance > 0.0)) {
     const BvhNode &root = visible_only ? bvh_nodes.front() : BvhNode{};
     tolerance =
@@ -471,15 +486,15 @@ std::vector<SamplePoint> GeneratePoints(
                         u * triangle.a.z + v * triangle.b.z + w * triangle.c.z};
     if (visible_only) {
       if (options.projection_mode == CADSAMPLE_PROJECTION_ORTHOGRAPHIC) {
-        const Vec3 toward_sensor{-view_direction.x, -view_direction.y,
-                                 -view_direction.z};
+        const Vec3 &toward_sensor = orthographic_toward_sensor;
         if (Dot(triangle.normal, toward_sensor) < minimum_facing_cosine)
           continue;
         const Vec3 ray_origin{position.x + toward_sensor.x * tolerance,
                               position.y + toward_sensor.y * tolerance,
                               position.z + toward_sensor.z * tolerance};
         if (HasOccluder(triangles, bvh_indices, bvh_nodes, ray_origin,
-                        toward_sensor, std::numeric_limits<double>::infinity()))
+                        toward_sensor, std::numeric_limits<double>::infinity(),
+                        &traversal_stack))
           continue;
       } else {
         const Vec3 to_point = Subtract(position, camera);
@@ -492,7 +507,7 @@ std::vector<SamplePoint> GeneratePoints(
         if (Dot(triangle.normal, toward_sensor) < minimum_facing_cosine)
           continue;
         if (HasOccluder(triangles, bvh_indices, bvh_nodes, camera, direction,
-                        distance - tolerance))
+                        distance - tolerance, &traversal_stack))
           continue;
       }
     }

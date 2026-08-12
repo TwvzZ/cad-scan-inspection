@@ -49,7 +49,7 @@ if (-not (Test-Path -LiteralPath $thirdPartyRoot -PathType Container)) {
     throw "OpenCASCADE third-party directory not found: $thirdPartyRoot"
 }
 
-$runtimeDirectories = @($occtBin, (Join-Path $runtimeRoot "msvc-runtime\bin"), (Join-Path $runtimeRoot "tbb-2021.13.0\bin"), (Join-Path $runtimeRoot "cad-sampling"))
+$runtimeDirectories = @((Split-Path -Parent $executable), $occtBin, $runtimeRoot)
 $runtimeDirectories += Get-ChildItem -LiteralPath $thirdPartyRoot `
     -Filter "*.dll" -File -Recurse |
     ForEach-Object { $_.DirectoryName } |
